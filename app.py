@@ -1,12 +1,19 @@
+import os
+from os.path import join, dirname
+from dotenv import load_dotenv
 from flask import Flask, render_template, jsonify, request
 from pymongo import MongoClient
 from datetime import datetime
-import os
 
-# Define the connection string to your MongoDB cluster
-connection_string = 'mongodb+srv://test:sparta@cluster0.qrxbmme.mongodb.net/?retryWrites=true&w=majority'
-client = MongoClient(connection_string)
-db = client.dbsparta
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
+MONGODB_URI = os.environ.get("MONGODB_URI")
+DB_NAME =  os.environ.get("DB_NAME")
+
+client = MongoClient(MONGODB_URI)
+db = client[DB_NAME]
 
 app = Flask(__name__)
 
@@ -41,11 +48,14 @@ def save_diary():
     profilename = f'{mytime}-profile.{extension}' 
     profile.save(os.path.join(app.config['UPLOAD_PROFILE'], profilename))
 
+    time = today.strftime('%Y-%m-%d')
+
     doc = {
         'profile': profilename,
         'file': filename,
         'title': title_receive,
-        'content': content_receive
+        'content': content_receive,
+        'time': time,
     }
     db.diary.insert_one(doc)
 
